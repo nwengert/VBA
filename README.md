@@ -1,1 +1,1 @@
-# VBA
+Examples of some Visual Basic for Applications programs I've written.  It was in VBA that I first found the magic of programming.  I was able to make spreadsheets pull data from each other, write and send e-mails, and automate tasks that had previously taken hours -- or even days for some of the hard-keying tasks necessary for customer reports.  

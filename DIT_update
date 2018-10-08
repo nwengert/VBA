@@ -1,0 +1,625 @@
+Option Explicit
+
+Dim PreviousMonth As String, NextMonth As String
+
+Private Sub cmdPreviousMonth_Click()
+    PreviousMonth = InputBox("Enter Previous Month as yyyy.mm", "Date")
+    Range("C2").Value = PreviousMonth
+End Sub
+
+Private Sub cmdNextMonth_Click()
+    NextMonth = InputBox("Enter Previous Month as yyyy.mm", "Date")
+    Range("C3").Value = NextMonth
+End Sub
+
+Private Sub cmdMakeThem_Click()
+
+    Application.ScreenUpdating = False
+    Dim CommonPath As String
+    CommonPath = "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\"
+
+'Continental OK SCOOP
+    Dim CLROKSCPpath, CLROKSCPpreviousfilename, CLROKSCPnextfilenameTIM, CLROKSCPnextfilenameDANNY As String
+    Dim DIT_TotalRows As Long
+        CLROKSCPpath = "Continental Resources (CLR OK)\CLR Area Dashboards\Scoop\DITs\"
+        CLROKSCPpreviousfilename = ThisWorkbook.Sheets("Update DITs").Range("C15").Value
+        CLROKSCPnextfilenameTIM = ThisWorkbook.Sheets("Update DITs").Range("D14")
+        CLROKSCPnextfilenameDANNY = ThisWorkbook.Sheets("Update DITs").Range("D16")
+'DANNY
+    Workbooks.Open CommonPath & CLROKSCPpath & CLROKSCPpreviousfilename & ".xlsx"
+    ActiveWorkbook.Sheets("DIT").Activate
+        DIT_TotalRows = ActiveSheet.Range("B944").End(xlUp).Row
+    'Clear filters
+    ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Clear
+        On Error Resume Next
+        ActiveSheet.ShowAllData
+        Selection.AutoFilter
+   'UPDATE
+    'Select&Copy End Date&Inv
+        Range("AA4:AB" & DIT_TotalRows).Select
+            Selection.Copy
+    'Paste into Beginning
+        Range("F4").Select
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+    'Clear Deliveries
+        Range("H4:Y" & DIT_TotalRows).Select
+            Application.CutCopyMode = False
+            Selection.ClearContents
+    'Clear Deliveries & comments
+        Range("AA4:AC" & DIT_TotalRows).Select
+            Application.CutCopyMode = False
+            Selection.ClearContents
+    'Make sure Driver spelling is uniform
+        Range("A4:AC" & DIT_TotalRows).Select
+        Selection.Replace What:="danny", Replacement:="Danny", LookAt:=xlPart, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+        Selection.Replace What:="tim", Replacement:="Tim", LookAt:=xlPart, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+        Selection.Replace What:="central", Replacement:="Central", LookAt:=xlPart, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+    'Sort By Driver, DSH Tab, Lease Name, Product Name
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Clear                    '*********
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[Driver]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[DSH Tab]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[Lease Name]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[Product Name]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+                With ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort
+                    .Header = xlYes
+                    .MatchCase = False
+                    .Orientation = xlTopToBottom
+                    .SortMethod = xlPinYin
+                    .Apply
+                End With
+    'Find and Replace Central and Tim with nada
+            Selection.Replace What:="Tim", Replacement:="", LookAt:=xlPart, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+            Selection.Replace What:="Central", Replacement:="", LookAt:=xlPart, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+            'Re-sort
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Clear                    '******
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[Driver]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+                With ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort
+                    .Header = xlYes
+                    .MatchCase = False
+                    .Orientation = xlTopToBottom
+                    .SortMethod = xlPinYin
+                    .Apply
+                End With
+            Range("A4").End(xlDown).Offset(1, 0).Select
+            Range(Selection, Selection.Offset(0, 29)).Select
+            Range(Selection, Selection.End(xlDown)).Select
+            Selection.ClearContents
+            'Hide extra rows
+            Range("A4").End(xlDown).Offset(7, 0).Select
+            Range(Selection, Selection.End(xlDown)).Select
+                Selection.EntireRow.Hidden = True
+    'Change Date
+            ThisWorkbook.Activate
+            Range("C3:C4").Select                                       'Change date
+                Selection.Copy
+            Windows(CLROKSCPpreviousfilename & ".xlsx").Activate
+            Range("E1").Select
+                Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+            Range("AC4").Select
+    'Save it
+        ActiveWorkbook.SaveAs CommonPath & CLROKSCPpath & CLROKSCPnextfilenameDANNY & ".xlsx"
+        ActiveWorkbook.Close
+'TIM
+    Workbooks.Open CommonPath & CLROKSCPpath & CLROKSCPpreviousfilename & ".xlsx"
+    DIT_TotalRows = ActiveWorkbook.Sheets("DIT").Columns("B").Rows
+    'Clear filters
+    ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Clear
+        On Error Resume Next
+        ActiveSheet.ShowAllData
+        Selection.AutoFilter
+   'UPDATE
+    'Select&Copy End Date&Inv
+        Range("AA4:AB" & DIT_TotalRows).Select
+            Selection.Copy
+    'Paste into Beginning
+        Range("F4").Select
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+    'Clear Deliveries
+        Range("H4:Y" & DIT_TotalRows).Select
+            Application.CutCopyMode = False
+            Selection.ClearContents
+    'Clear Deliveries & Comments
+        Range("AA4:AC" & DIT_TotalRows).Select
+            Application.CutCopyMode = False
+            Selection.ClearContents
+    'Make sure Driver spelling is uniform
+        Range("A4:AC" & DIT_TotalRows).Select
+        Selection.Replace What:="danny", Replacement:="Danny", LookAt:=xlPart, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+        Selection.Replace What:="tim", Replacement:="Tim", LookAt:=xlPart, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+        Selection.Replace What:="central", Replacement:="Central", LookAt:=xlPart, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+    'Sort By Driver, Tab, Lease Name, Product Name
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Clear                    '*******
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[Driver]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[DSH Tab]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[Lease Name]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[Product Name]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+                With ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort
+                    .Header = xlYes
+                    .MatchCase = False
+                    .Orientation = xlTopToBottom
+                    .SortMethod = xlPinYin
+                    .Apply
+                End With
+    'Find and Replace Central and Danny with nada
+            Selection.Replace What:="Danny", Replacement:="", LookAt:=xlPart, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+            Selection.Replace What:="Central", Replacement:="", LookAt:=xlPart, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+            'Re-sort
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Clear
+            ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[Driver]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+                With ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort
+                    .Header = xlYes
+                    .MatchCase = False
+                    .Orientation = xlTopToBottom
+                    .SortMethod = xlPinYin
+                    .Apply
+                End With
+            Range("A4").End(xlDown).Offset(1, 0).Select
+            Range(Selection, Selection.Offset(0, 29)).Select
+            Range(Selection, Selection.End(xlDown)).Select
+            Selection.ClearContents
+            'Hide extra rows
+            Range("A4").End(xlDown).Offset(7, 0).Select
+            Range(Selection, Selection.End(xlDown)).Select
+                Selection.EntireRow.Hidden = True
+    'Change Date
+            ThisWorkbook.Activate
+            Range("C3:C4").Select                                       'Change date
+                Selection.Copy
+            Windows(CLROKSCPpreviousfilename & ".xlsx").Activate
+            Range("E1").Select
+                Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+                :=False, Transpose:=False
+            Range("AC4").Select
+    'Save it
+        ActiveWorkbook.SaveAs CommonPath & CLROKSCPpath & CLROKSCPnextfilenameTIM & ".xlsx"
+        ActiveWorkbook.Close
+    Unload UF1UpdateDITs
+
+'Chaparral TX GRU (Burr)
+    Dim CHPTXpath As String, CHPTXpreviousfilename As String, CHPTXnextfilename As String
+        CHPTXpath = "Chaparral Energy (CHAP)\dashboards\Burr - OK Panhandle\"
+        CHPTXpreviousfilename = Range("C7").Value
+        CHPTXnextfilename = Range("D7").Value
+    Workbooks.Open CommonPath & CHPTXpath & CHPTXpreviousfilename & ".xlsx"
+        Range("L9", Range("M9").End(xlDown)).Select 'Select,Copy End Date&Inv
+            Selection.Copy
+        Range("I9").Select                          'Paste into Beginning
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+        Range("K9", Range("N9").End(xlDown).Offset(0, -1)).Select
+            Application.CutCopyMode = False
+            Selection.ClearContents                  'Clear End
+        ThisWorkbook.Activate
+        Range("C3").Select 'Change Date
+            Selection.Copy
+        Windows(CHPTXpreviousfilename & ".xlsx").Activate
+        Range("N4").Select
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+    ActiveWorkbook.SaveAs CommonPath & CHPTXpath & CHPTXnextfilename & ".xlsx"
+    ActiveWorkbook.Close
+    ThisWorkbook.Activate
+
+'PO&G TX (Burr)
+    Dim POGTXpath As String, POGTXpreviousfilename As String, POGTXnextfilename As String
+        POGTXpath = "PO&G\Dashboards\DITs\"
+        POGTXpreviousfilename = Range("C22").Value
+        POGTXnextfilename = Range("D22").Value
+    Workbooks.Open CommonPath & POGTXpath & POGTXpreviousfilename & ".xlsx"
+        Sheets("DIT").Range("AM4:AN111").Select                       'Select&Copy End Date&Inv
+            Selection.Copy
+        Range("P4").Select                                          'Paste into Beginning
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+        Range("R4", "AI111").Select                                  'Clear Deliveries
+            Application.CutCopyMode = False
+            Selection.ClearContents
+        Range("AM4", "AO111").Select                                 'End Date&Inv
+            Application.CutCopyMode = False
+            Selection.ClearContents
+        ThisWorkbook.Activate
+        Range("C3:C4").Select                                       'Change date
+            Selection.Copy
+        Windows(POGTXpreviousfilename & ".xlsx").Activate
+        Range("E1").Select
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+    ActiveWorkbook.SaveAs CommonPath & POGTXpath & POGTXnextfilename & ".xlsx"
+    ActiveWorkbook.Close
+    ThisWorkbook.Activate
+
+''CLR Texas Ringwood (Burr)
+'    Dim CLRTXRWDpath As String, CLRTXRWDpreviousfilename As String, CLRTXRWDnextfilename As String
+'        CLRTXRWDpath = "Continental Resources (CLR OK)\CLR Area Dashboards\TX Ringwood\DITs\"
+'        CLRTXRWDpreviousfilename = Range("C17").Value
+'        CLRTXRWDnextfilename = Range("D17").Value
+'    Workbooks.Open CommonPath & CLRTXRWDpath & CLRTXRWDpreviousfilename & ".xlsx"
+'        Range("AB5", Range("AC5").End(xlDown)).Select               'Select&Copy End Date&Inv
+'            Selection.Copy
+'        Range("G5").Select                                          'Paste into Beginning
+'            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+'            :=False, Transpose:=False
+'        Range("I5", Range("AA5").End(xlDown).Offset(0, -1)).Select  'Clear Deliveries
+'            Application.CutCopyMode = False
+'            Selection.ClearContents
+'        Range("AB5", Range("AA5").End(xlDown).Offset(0, 3)).Select  'Clear Deliveries & comments
+'            Application.CutCopyMode = False
+'            Selection.ClearContents
+'        ThisWorkbook.Activate
+'        Range("C3:C4").Select                                       'Change date
+'            Selection.Copy
+'        Windows(CLRTXRWDpreviousfilename & ".xlsx").Activate
+'        Range("D1").Select
+'            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+'            :=False, Transpose:=False
+'    ActiveWorkbook.SaveAs CommonPath & CLRTXRWDpath & CLRTXRWDnextfilename & ".xlsx"
+'    ActiveWorkbook.Close
+'    ThisWorkbook.Activate
+
+'Chaparral OK LIN (Russ)
+    Dim CHPOKLINpath As String, CHPOKLINpreviousfilename As String, CHPOKLINnextfilename As String
+        CHPOKLINpath = "\Chaparral Energy (CHAP)\dashboards\Russ - OK Lindsay\"
+        CHPOKLINpreviousfilename = Range("C8").Value
+        CHPOKLINnextfilename = Range("D8").Value
+    Workbooks.Open CommonPath & CHPOKLINpath & CHPOKLINpreviousfilename & ".xlsx"
+        Range("L9", Range("M9").End(xlDown)).Select     'Select&Copy End Date&Inv
+            Selection.Copy
+        Range("I9").Select                              'Paste into Beginning
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+        Range("K9", Range("N9").End(xlDown).Offset(0, -1)).Select
+            Application.CutCopyMode = False
+            Selection.ClearContents
+        ThisWorkbook.Activate
+        Range("C3").Select
+            Selection.Copy
+        Windows(CHPOKLINpreviousfilename & ".xlsx").Activate
+        Range("N4").Select
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+    ActiveWorkbook.SaveAs CommonPath & CHPOKLINpath & CHPOKLINnextfilename & ".xlsx"
+    ActiveWorkbook.Close
+    ThisWorkbook.Activate
+
+'Chesapeake MDC LIN (Russ)
+    Dim CHKMDCLINpath As String, CHKMDCLINpreviousfilename As String, CHKMDCLINnextfilename As String
+        CHKMDCLINpath = "Chesapeake Mid-Con (CHKS MDC)\MDC LIN - Shawn P\CHKS MDC Monthly Scorecards\DITs\"
+        CHKMDCLINpreviousfilename = Range("C10").Value
+        CHKMDCLINnextfilename = Range("D10").Value
+    Workbooks.Open CommonPath & CHKMDCLINpath & CHKMDCLINpreviousfilename & ".xlsx"
+        Range("AL4", Range("AM4").End(xlDown)).Select               'Select&Copy End Date&Inv
+            Selection.Copy
+        Range("O4").Select                                          'Paste into Beginning
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+        Range("Q4", Range("AK4").End(xlDown).Offset(0, -3)).Select  'Clear Deliveries
+            Application.CutCopyMode = False
+            Selection.ClearContents
+        Range("AL4", Range("AK4").End(xlDown).Offset(0, 2)).Select  'Clear End Inventory
+            Application.CutCopyMode = False
+            Selection.ClearContents
+        ThisWorkbook.Activate
+        Range("C3:C4").Select                                          'Change date
+            Selection.Copy
+        Windows(CHKMDCLINpreviousfilename & ".xlsx").Activate
+        Range("D1").Select
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+    ActiveWorkbook.SaveAs CommonPath & CHKMDCLINpath & CHKMDCLINnextfilename & ".xlsx"
+    ActiveWorkbook.Close
+    ThisWorkbook.Activate
+
+'Citizen Energy (Russ)
+    Dim CEIIpath As String, CEIIpreviousfilename As String, CEIInextfilename As String
+        CEIIpath = "Citizen Energy (CE)\Chemical Reports\"
+        CEIIpreviousfilename = Range("C12").Value
+        CEIInextfilename = Range("D12").Value
+    Workbooks.Open CommonPath & CEIIpath & CEIIpreviousfilename & ".xlsx"
+        Range("O5", Range("P5").End(xlDown)).Select               'Select&Copy End Date&Inv
+            Selection.Copy
+        Range("L5").Select                                          'Paste into Beginning
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+        Range("N5", Range("Q5").End(xlDown).Offset(0, -1)).Select  'Clear Deliveries
+            Application.CutCopyMode = False
+            Selection.ClearContents
+        ThisWorkbook.Activate
+        Range("C3:C4").Select                                       'Change date
+            Selection.Copy
+        Windows(CEIIpreviousfilename & ".xlsx").Activate
+        Range("E1").Select
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+    ActiveWorkbook.SaveAs CommonPath & CEIIpath & CEIInextfilename & ".xlsx"
+    ActiveWorkbook.Close
+    ThisWorkbook.Activate
+
+'Enervest (Russ)
+    Dim EVEPOKOKCpath As String, EVEPOKOKCpreviousfilename As String, EVEPOKOKCnextfilename As String
+        EVEPOKOKCpath = "EnerVest (EVEP)\dashboards\"
+        EVEPOKOKCpreviousfilename = Range("C19").Value
+        EVEPOKOKCnextfilename = Range("D19").Value
+    Workbooks.Open CommonPath & EVEPOKOKCpath & EVEPOKOKCpreviousfilename & ".xlsx"
+        Range("P10", Range("Q10").End(xlDown)).Select               'Select&Copy End Date&Inv
+            Selection.Copy
+        Range("M10").Select                                          'Paste into Beginning
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+        Range("O10", Range("P10").End(xlDown).Offset(0, 1)).Select  'Clear Gal Dlvd, End Date/Inv
+            Application.CutCopyMode = False
+            Selection.ClearContents
+        ThisWorkbook.Activate
+        Range("C3:C4").Select                                       'Change date
+            Selection.Copy
+        Windows(EVEPOKOKCpreviousfilename & ".xlsx").Activate
+        Range("S5").Select
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+    ActiveWorkbook.SaveAs CommonPath & EVEPOKOKCpath & EVEPOKOKCnextfilename & ".xlsx"
+    ActiveWorkbook.Close
+    ThisWorkbook.Activate
+
+''GulfPort (Russ)      ***************We lost this in July....  Dicks
+'    Dim GPOROKpath As String, GPOROKpreviousfilename As String, GPOROKnextfilename As String
+'        GPOROKpath = "Gulfport (GPOR)\Dashboard\DITs\GulfPort\"
+'        GPOROKpreviousfilename = Range("C20").Value
+'        GPOROKnextfilename = Range("D20").Value
+'    Workbooks.Open CommonPath & GPOROKpath & GPOROKpreviousfilename & ".xlsx"
+'        Range("Z4", Range("AA4").End(xlDown)).Select               'Select&Copy End Date&Inv
+'            Selection.Copy
+'        Range("E4").Select                                          'Paste into Beginning
+'            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+'            :=False, Transpose:=False
+'        Range("G4", Range("Y4").End(xlDown).Offset(0, -1)).Select  'Clear Deliveries
+'            Application.CutCopyMode = False
+'            Selection.ClearContents
+'        Range("Z4", Range("Y4").End(xlDown).Offset(0, 2)).Select  'End Date&Inv
+'            Application.CutCopyMode = False
+'            Selection.ClearContents
+'        ThisWorkbook.Activate
+'        Range("C3:C4").Select                                       'Change date
+'            Selection.Copy
+'        Windows(GPOROKpreviousfilename & ".xlsx").Activate
+'        Range("D1").Select
+'            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+'            :=False, Transpose:=False
+'    ActiveWorkbook.SaveAs CommonPath & GPOROKpath & GPOROKnextfilename & ".xlsx"
+'    ActiveWorkbook.Close
+'    ThisWorkbook.Activate
+
+'White Operating (Mike)
+    Dim WHTOKOKCpath As String, WHTOKOKCpreviousfilename As String, WHTOKOKCnextfilename As String
+        WHTOKOKCpath = "White Operating (WHITE)\WHT Dashboards\DITs\"
+        WHTOKOKCpreviousfilename = Range("C23").Value
+        WHTOKOKCnextfilename = Range("D23").Value
+    Workbooks.Open CommonPath & WHTOKOKCpath & WHTOKOKCpreviousfilename & ".xlsx"
+        Range("Z4", Range("AA4").End(xlDown)).Select               'Select&Copy End Date&Inv
+            Selection.Copy
+        Range("E4").Select                                          'Paste into Beginning
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+        Range("G4", Range("Y4").End(xlDown).Offset(0, -1)).Select  'Clear Deliveries
+            Application.CutCopyMode = False
+            Selection.ClearContents
+        Range("Z4", Range("Y4").End(xlDown).Offset(0, 3)).Select  'Clear Deliveries & comments
+            Application.CutCopyMode = False
+            Selection.ClearContents
+        ThisWorkbook.Activate
+        Range("C3:C4").Select                                       'Change date
+            Selection.Copy
+        Windows(WHTOKOKCpreviousfilename & ".xlsx").Activate
+        Range("D1").Select
+            Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+    ActiveWorkbook.SaveAs CommonPath & WHTOKOKCpath & WHTOKOKCnextfilename & ".xlsx"
+    ActiveWorkbook.Close
+
+ 'Send emails***********************************************************************************************************
+
+    Dim olApp As Object
+    Dim olEmail As Object
+'To Russ
+    Set olApp = CreateObject("Outlook.Application")
+    Set olEmail = olApp.createitem(0)
+        With olEmail
+            .BodyFormat = 2
+            .Display
+            .To = "Russell.Guinn@innospecinc.com"
+            .Subject = Range("C4").Value & " - Delivery and Inventory Trackers"
+            .HTMLBody = "Russ here are your " & Range("C4").Value & " DITs.<br>Please remember to leave good comments." & .HTMLBody
+            'Russ' Chaparral
+            .Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Chaparral Energy (CHAP)\dashboards\Russ - OK Lindsay\" & Range("D8").Value & ".xlsx"
+            'Russ' Chesapeake
+            .Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Chesapeake Mid-Con (CHKS MDC)\MDC LIN - Shawn P\CHKS MDC Monthly Scorecards\DITs\" & Range("D10").Value & ".xlsx"
+            'Russ Citizens Energy
+            .Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Citizen Energy (CE)\Chemical Reports\" & Range("D12").Value & ".xlsx"
+            'Russ EnerVest
+            .Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\EnerVest (EVEP)\dashboards\" & Range("D19").Value & ".xlsx"
+            'Russ GulfPort
+            '.Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Gulfport (GPOR)\Dashboard\DITs\GulfPort\" & Range("D20").Value & ".xlsx"
+            .Send
+        End With
+'To Burr
+    Set olApp = CreateObject("Outlook.Application")
+    Set olEmail = olApp.createitem(0)
+        With olEmail
+            .BodyFormat = 2
+            .Display
+            .To = "Burr.Barton@innospecinc.com"
+            .cc = "Rod.Karlin@innospecinc.com"
+            .Subject = Range("C4").Value & " - Delivery and Inventory Trackers"
+            .HTMLBody = "Burr here are your " & Range("C4").Value & " DITs.<br>Please remember to leave good comments." & .HTMLBody
+            'Burr's Chaparral
+            .Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Chaparral Energy (CHAP)\dashboards\Burr - OK Panhandle\" & Range("D7").Value & ".xlsx"
+            'Burr's PO&G
+            .Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\PO&G\Dashboards\DITs\" & Range("D22").Value & ".xlsx"
+'            'Burr's Continental TX RWD
+'            .Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Continental Resources (CLR OK)\CLR Area Dashboards\TX Ringwood\DITs\" & Range("D17").Value & ".xlsx"
+            .Send
+        End With
+'To Mike
+    Set olApp = CreateObject("Outlook.Application")
+    Set olEmail = olApp.createitem(0)
+        With olEmail
+            .BodyFormat = 2
+            .Display
+            .To = "Mike.Cloyes@innospecinc.com"
+            .Subject = Range("C4").Value & " - Delivery and Inventory Trackers"
+            .HTMLBody = "Mike here is your " & Range("C4").Value & " DIT.<br>Please remember to leave good comments." & .HTMLBody
+            .Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\White Operating (WHITE)\WHT Dashboards\DITs\" & Range("D23").Value & ".xlsx"
+            .Send
+        End With
+'To Tim, Danny
+    Set olApp = CreateObject("Outlook.Application")
+    Set olEmail = olApp.createitem(0)
+        With olEmail
+            .BodyFormat = 2
+            .Display
+            .To = "Tim.Salander@innospecinc.com; Daniel.Watts@innospecinc.com"
+            .Subject = "CLR SCOOP Delivery and Inventory Trackers"
+            .HTMLBody = "Guys here are your " & Range("C4").Value & " DITs.<br>Please remember to leave good comments." & .HTMLBody
+            'Tim's
+            .Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Continental Resources (CLR OK)\CLR Area Dashboards\Scoop\DITs\" & Range("D14").Value & ".xlsx"
+'            'Central
+'            .Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Continental Resources (CLR OK)\CLR Area Dashboards\Scoop\DITs\" & Range("D15").Value & ".xlsx"
+            'Danny's
+            .Attachments.Add "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Continental Resources (CLR OK)\CLR Area Dashboards\Scoop\DITs\" & Range("D16").Value & ".xlsx"
+            .Send
+        End With
+    ThisWorkbook.Activate
+    Application.CutCopyMode = False
+    Unload UF1UpdateDITs
+    Application.ScreenUpdating = True
+    Range("A1").Select
+End Sub
+
+Private Sub cmdDeleteThem_Click()
+
+    Dim CommonPath As String, z As String
+    CommonPath = "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\"
+    z = ".xlsx"
+    
+    Dim CHPTXpath As String, CHPTXnextfilename As String
+    CHPTXpath = "Chaparral Energy (CHAP)\dashboards\Burr - OK Panhandle\"
+    CHPTXnextfilename = Range("D7").Value
+    On Error Resume Next
+    Kill (CommonPath & CHPTXpath & CHPTXnextfilename & z)
+
+    Dim POGTXpath As String, POGTXnextfilename As String
+    POGTXpath = "PO&G\Dashboards\DITs\"
+    POGTXnextfilename = Range("D22").Value
+    On Error Resume Next
+    Kill (CommonPath & POGTXpath & POGTXnextfilename & z)
+
+    Dim CLRTXRWDpath As String, CLRTXRWDnextfilename As String
+    CLRTXRWDpath = "Continental Resources (CLR OK)\CLR Area Dashboards\TX Ringwood\DITs\"
+    CLRTXRWDnextfilename = Range("D17").Value
+    On Error Resume Next
+    Kill (CommonPath & CLRTXRWDpath & CLRTXRWDnextfilename & z)
+
+    Dim CHPOKLINpath As String, CHPOKLINnextfilename As String
+    CHPOKLINpath = "\Chaparral Energy (CHAP)\dashboards\Russ - OK Lindsay\"
+    CHPOKLINnextfilename = Range("D8").Value
+    On Error Resume Next
+    Kill (CommonPath & CHPOKLINpath & CHPOKLINnextfilename & z)
+
+    Dim CHKMDCLINpath As String, CHKMDCLINnextfilename As String
+    CHKMDCLINpath = "Chesapeake Mid-Con (CHKS MDC)\MDC LIN - Shawn P\CHKS MDC Monthly Scorecards\DITs\"
+    CHKMDCLINnextfilename = Range("D10").Value
+    On Error Resume Next
+    Kill (CommonPath & CHKMDCLINpath & CHKMDCLINnextfilename & z)
+
+    Dim CEIIpath As String, CEIInextfilename As String
+    CEIIpath = "Citizen Energy (CE)\Chemical Reports\"
+    CEIInextfilename = Range("D12").Value
+    On Error Resume Next
+    Kill (CommonPath & CEIIpath & CEIInextfilename & z)
+
+    Dim EVEPOKOKCpath As String, EVEPOKOKCnextfilename As String
+    EVEPOKOKCpath = "EnerVest (EVEP)\dashboards\"
+    EVEPOKOKCnextfilename = Range("D19").Value
+    On Error Resume Next
+    Kill (CommonPath & EVEPOKOKCpath & EVEPOKOKCnextfilename & z)
+
+    Dim GPOROKpath As String, GPOROKnextfilename As String
+    GPOROKpath = "Gulfport (GPOR)\Dashboard\DITs\GulfPort\"
+    GPOROKnextfilename = Range("D20").Value
+    On Error Resume Next
+    Kill (CommonPath & GPOROKpath & GPOROKnextfilename & z)
+
+    Dim WHTOKOKCpath As String, WHTOKOKCnextfilename As String
+    WHTOKOKCpath = "White Operating (WHITE)\WHT Dashboards\DITs\"
+    WHTOKOKCnextfilename = Range("D23").Value
+    On Error Resume Next
+    Kill (CommonPath & WHTOKOKCpath & WHTOKOKCnextfilename & z)
+    
+    Dim CLROKSCPpath As String, CLROKSCPnextfilename As String
+    CLROKSCPpath = "Continental Resources (CLR OK)\CLR Area Dashboards\Scoop\DITs\"
+    CLROKSCPnextfilename = Range("D14").Value
+    On Error Resume Next
+    Kill (CommonPath & CLROKSCPpath & CLROKSCPnextfilename & z)
+    
+    CLROKSCPnextfilename = Range("D15").Value
+    On Error Resume Next
+    Kill (CommonPath & CLROKSCPpath & CLROKSCPnextfilename & z)
+    
+    CLROKSCPnextfilename = Range("D16").Value
+    On Error Resume Next
+    Kill (CommonPath & CLROKSCPpath & CLROKSCPnextfilename & z)
+    
+Unload UF1UpdateDITs
+End Sub
+
+Private Sub cmdCLRSCPmakeALL_Click()
+Dim path As String, Month As String, TimsDIT As String, DannysDIT As String, DITALL As String
+Dim LastRow As Long
+
+'path = "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Continental Resources (CLR OK)\CLR Area Dashboards\Scoop\DITs\"
+path = "R:\Laboratory Documents\04 Usage and Monitoring\Companies\Continental Resources (CLR OK)\CLR Area Dashboards\Scoop\DITs\"
+    Month = Range("C3").Value
+    If Right(Month, 2) = ".1" Then
+        Month = Month & "0"
+    End If
+    Workbooks.Open path & "CLR OK SCP " & Month & " DIT from Danny.xlsx"
+        DannysDIT = ActiveWorkbook.Name
+    Workbooks.Open path & "CLR OK SCP " & Month & " DIT from Tim.xlsx"
+        TimsDIT = ActiveWorkbook.Name
+Windows(DannysDIT).Activate
+    Range("A4:AO4").Select
+    Range(Selection, Selection.End(xlDown)).Select
+        Selection.Copy
+Windows(TimsDIT).Activate
+    Sheets("DIT").Activate
+    Range("A" & Rows.Count).End(xlUp).Offset(1, 0).Select
+        Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+LastRow = ActiveSheet.Range("A" & Rows.Count).End(xlUp).Row
+'Sort
+    Range("A4:AO4").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Application.CutCopyMode = False
+        ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Clear
+        ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[DSH Tab]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+        ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[Well Name]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+        ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort.SortFields.Add Key:=Range("Table7216[Product" & Chr(13) & "" & Chr(10) & "Name]"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+            With ActiveWorkbook.Worksheets("DIT").ListObjects("Table7216").Sort
+                .Header = xlYes
+                .MatchCase = False
+                .Orientation = xlTopToBottom
+                .SortMethod = xlPinYin
+                .Apply
+            End With
+'Make Formatting Regular
+    Range("A5:AO" & LastRow).Select
+        Selection.AutoFill Destination:=Range("A5:AO" & LastRow), Type:=xlFillFormats
+    Range("A5:AO" & LastRow).Select
+    Range("Table7216[[#Headers],[Well Name]]").Select
+    
+Windows(DannysDIT).Activate
+    ActiveWorkbook.Close
+Windows(TimsDIT).Activate
+    ActiveWorkbook.SaveAs path & "CLR OK SCP " & Month & " DIT ALL.xlsx"
+    
+
+    
+Unload UF1UpdateDITs
+End Sub

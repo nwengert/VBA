@@ -1,0 +1,94 @@
+Option Explicit
+Sub createDatabase()
+Application.DisplayAlerts = False
+Dim column, lastColumn, lastRow, lastRowOfColumn, p, v, c, f, amount, j, i, quarter As Long
+Dim protein, veggie, carb, fat, object, gender, intent, bigObject, JSON As String
+
+lastColumn = Cells(3, Columns.Count).End(xlToLeft).column
+lastRow = ActiveSheet.UsedRange.Rows(ActiveSheet.UsedRange.Rows.Count).Row
+amount = Range("C2").Value
+
+ActiveWorkbook.Save
+'get rid of old stuff
+    Range("B5").End(xlDown).Offset(1, 1).Select
+    Range(Selection, Selection.End(xlToRight)).Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Selection.ClearContents
+                                                                                   
+For column = 3 To lastColumn
+gender = "{" & vbNewLine _
+    & """gender""" & ": """ & Cells(3, column).Value & """," & vbNewLine
+intent = """intent""" & ": """ & Cells(4, column).Value & """," & vbNewLine
+        For p = 5 To 5 + amount - 1
+        protein = """protein""" & ": """ & Cells(p, 2).Value & """," & vbNewLine & _
+                                                     """proteinAmt""" & ": """ & Cells(p, column).Value & """," & vbNewLine
+                                                     
+                For v = 5 + amount To 5 + amount * 2 - 1
+                veggie = """veggie""" & ": """ & Cells(v, 2).Value & """," & vbNewLine & _
+                                                     """veggieAmt""" & ": """ & Cells(v, column).Value & """," & vbNewLine
+                                                     
+                        For c = 5 + amount * 2 To 5 + amount * 3 - 1
+                        carb = """carb""" & ": """ & Cells(c, 2).Value & """," & vbNewLine & _
+                                                     """carbAmt""" & ": """ & Cells(c, column).Value & """," & vbNewLine
+                                                     
+                                For f = 5 + amount * 3 To 5 + amount * 4 - 1
+                                fat = """fat""" & ": """ & Cells(f, 2).Value & """," & vbNewLine & _
+                                                     """fatAmt""" & ": """ & Cells(f, column).Value & """" & vbNewLine & "}," & vbNewLine
+                                                     
+                                                        object = gender & intent & protein & veggie & carb & fat
+                                                        lastRowOfColumn = Cells(Rows.Count, column).End(xlUp).Row + 1
+                                                        Cells(lastRowOfColumn, column).Value = object
+                                Next f
+                        Next c
+                Next v
+        Next p
+Next column
+quarter = (lastRowOfColumn - 20) / 4
+
+'Each cell can only have 32,767 characters, this is exceeding that length.
+'make bigObjects at the bottom of the columns
+For i = 3 To lastColumn
+  bigObject = ""
+  
+    For j = 5 + amount * 4 To 5 + amount * 4 + quarter
+        bigObject = bigObject & Cells(j, i).Value
+    Next j
+    Cells(lastRowOfColumn + 1, i).Value = bigObject
+  bigObject = ""
+  
+    For j = 5 + amount * 4 + quarter + 1 To 5 + amount * 4 + quarter * 2
+        bigObject = bigObject & Cells(j, i).Value
+    Next j
+    Cells(lastRowOfColumn + 2, i).Value = bigObject
+  bigObject = ""
+  
+    For j = 5 + amount * 4 + quarter * 2 + 1 To 5 + amount * 4 + quarter * 3
+        bigObject = bigObject & Cells(j, i).Value
+    Next j
+    Cells(lastRowOfColumn + 3, i).Value = bigObject
+  bigObject = ""
+
+    For j = 5 + amount * 4 + quarter * 3 + 1 To 5 + amount * 4 + quarter * 4 - 1
+        bigObject = bigObject & Cells(j, i).Value
+    Next j
+    Cells(lastRowOfColumn + 4, i).Value = bigObject
+  bigObject = ""
+  
+Next i
+
+ActiveWindow.ScrollRow = j
+
+Rows("277:280").Select
+    Selection.RowHeight = 43
+Range("C:N").ColumnWidth = 22
+Range("I:I").ColumnWidth = 1
+Application.DisplayAlerts = True
+End Sub
+ 
+Sub Button2_Click()
+MsgBox "This is a pogram that can make JSON objects for a database out of the information in the table" & vbNewLine & _
+"This program is scaleable to adding more food types to the table.  The only limiting factor is a cell's character limit at 32,767." & vbNewLine & _
+"This is why it is impossible to make one giant JSON object from this program.  Right now the objects that are created sit at the lower end of 14K characters.  Adding more foods would definitely increase that.  The first error to check for would be the diving up at the end of the macro.  Currently I have it getting quartered." & vbNewLine & _
+"DO NOT MOVE ANYTHING AROUND!" & vbNewLine & _
+"Just insert a row at the bottom of the category to which to wish to add a food type. You can't add only one item to a type, each type needs to receive the same amount of items so that the calculations done off of the number of each items that there are will work."
+End Sub

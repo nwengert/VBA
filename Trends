@@ -1,0 +1,234 @@
+Option Explicit
+
+Private Sub cmdCreateTrend_Click()
+    Dim path As String, x As String, Docpath As String
+    Dim NewTrendDoc As Variant, ProductionDoc As Variant, NewBook As Variant
+    Dim FilenameCell As Range
+    path = "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Continental Resources (CLR OK)\Production\"
+    'path = "R:\Laboratory Documents\04 Usage and Monitoring\Companies\Continental Resources (CLR OK)\Production\"
+    Docpath = "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Continental Resources (CLR OK)\"
+    'Create and save new trend document
+    Set NewBook = Workbooks.Add
+        With NewBook
+            'add titles and formatting of them
+            .Title = Range("G9")
+            .SaveAs FileName:=Docpath & ThisWorkbook.Sheets("CLR Production Trends").Range("F9") & ".xlsx"
+            Range("A1").Value = "Year"
+            Range("B1").Value = "Month"
+        End With
+    NewTrendDoc = ActiveWorkbook.Name           'NewTrendDoc***********************************************
+    'open first of the files to copy formatting
+    ThisWorkbook.Sheets("CLR Production Trends").Activate
+    
+    Workbooks.Open path & Range("A11").Value
+    ProductionDoc = ActiveWorkbook.Name         'ProductionDoc***********************************************
+        Range("A1").End(xlDown).Select
+        Range(Selection, Selection.End(xlToRight)).Select
+            Selection.Copy
+    'Back to New Workbook
+    Windows(NewTrendDoc).Activate
+        Range("C1").Select
+        ActiveSheet.Paste
+            Range("C1").Select
+            Application.CutCopyMode = False
+                Selection.Copy
+            Range("A1:B1").Select
+            'Paste Format of C1 onto A1 & B1
+                Selection.PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+            Columns("A:N").Select
+                Selection.ColumnWidth = 13
+    Workbooks(ProductionDoc).Close
+        Application.CutCopyMode = False
+        Application.DisplayAlerts = False
+'START THE LOOP
+Application.AskToUpdateLinks = False
+    ThisWorkbook.Sheets("CLR Production Trends").Activate
+    Range("F6").Select
+        Cells.Find(What:=Range("F8").Value, After:=ActiveCell, LookIn:=xlFormulas, LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext, MatchCase:=False, SearchFormat:=False).Activate
+        Cells.FindNext(After:=ActiveCell).Activate
+        ActiveCell.Offset(-1, 0).Activate
+            Do Until ActiveCell.Offset(1, 0).Value = ""
+                ActiveCell.Offset(1, 0).Select                                          'Select next Filename for data extraction
+                Set FilenameCell = Selection                                            'Be able to come back to most recent Filename
+                Workbooks.Open path & Selection.Value                                   'Open Doc for data extraction
+                ProductionDoc = ActiveWorkbook.Name
+                    Cells.Find(What:="Property Number", After:=ActiveCell, LookIn:=xlFormulas, LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext, MatchCase:=False, SearchFormat:=False).Activate
+                    Cells.FindNext(After:=ActiveCell).Activate
+                    Range(Selection.Offset(1, 0), Selection.Offset(1, 11).End(xlDown)).Select
+                    Selection.Copy                                                      'Copy data to extract
+                Windows(NewTrendDoc).Activate
+                    Cells(Rows.Count, 3).End(xlUp).Offset(1, 0).Select
+                        Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+                    'SORT!!!
+                Windows(ProductionDoc).Close
+                    Application.CutCopyMode = False
+                    Application.DisplayAlerts = False
+                ThisWorkbook.Sheets("CLR Production Trends").Activate
+                    FilenameCell.Select                                                 'Back to cell of just-extracted data's Filename
+                    Range(Selection.Offset(0, 3), Selection.Offset(0, 4)).Copy          'Copy Dates
+                Windows(NewTrendDoc).Activate
+                    Cells(Sheet1.Rows.Count, 1).End(xlUp).Offset(1, 0).Select
+                    Range(Selection, Range("C1").End(xlDown).Offset(0, -1)).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+                
+                ThisWorkbook.Sheets("CLR Production Trends").Activate
+                    FilenameCell.Select
+            Loop
+    'Tidy Up
+            Windows(NewTrendDoc).Activate
+                Range("A2").Select
+                ActiveWindow.FreezePanes = True
+                Columns("A:N").EntireColumn.AutoFit
+                Application.CutCopyMode = False
+                Rows("1:1").Select
+                    With Selection
+                        .AutoFilter
+                        .VerticalAlignment = xlCenter
+                        .Orientation = 0
+                        .AddIndent = False
+                        .IndentLevel = 0
+                        .ShrinkToFit = False
+                        .ReadingOrder = xlLTR
+                        .MergeCells = False
+                    End With
+                Columns("O:O").Select
+                    Range(Selection, Selection.End(xlToRight)).Select
+                    Selection.EntireColumn.Hidden = True
+                Columns("I:N").Select
+                    Selection.NumberFormat = "#,##0.000"
+                Range("A1").Select
+Unload UF3CLRProductionTrends
+End Sub
+
+Private Sub cmdImportFilenames_Click()
+    Dim myFile As String, path As String
+    Dim erow As Long
+'If you're connected to server
+'path = "\\innospec.itnet.octel\Oklahoma\Departmental\Laboratory Documents\04 Usage and Monitoring\Companies\Continental Resources (CLR OK)\Production\"
+'If connected via VPN
+path = "R:\Laboratory Documents\04 Usage and Monitoring\Companies\Continental Resources (CLR OK)\Production\"
+    myFile = Dir(path & "*.xls*")
+    ThisWorkbook.Sheets("CLR Production Trends").Range("A11", Range("A11").End(xlDown)).ClearContents
+    Range("A1").Select
+    Do While myFile <> ""
+        erow = Sheets("CLR Production Trends").Range("A" & Rows.Count).End(xlUp).Offset(1, 0).Row
+        Cells(erow, 1) = myFile
+        myFile = Dir()
+    Loop
+    Range("A:A").EntireColumn.AutoFit
+    'Unload UF3CLRProductionTrends
+End Sub
+
+Private Sub cmdClearSheet_Click()
+    ThisWorkbook.Sheets("CLR Production Trends").Range("A11", Range("A11").End(xlDown)).ClearContents
+    Range("A1").Select
+End Sub
+
+Private Sub txtDocumentName_Change()
+ThisWorkbook.Sheets("CLR Production Trends").Activate
+Range("F9").Value = txtDocumentName
+End Sub
+
+Private Sub txtStartDate_Change()
+ThisWorkbook.Sheets("CLR Production Trends").Activate
+Range("F8").Value = txtStartDate
+End Sub
+
+Private Sub txtWellBeingStudied_Change()
+ThisWorkbook.Sheets("CLR Production Trends").Activate
+Range("J10").Value = txtWellBeingStudied
+End Sub
+
+Private Sub cmdMakeGraphs_Click()
+Dim StudiedWell As String, Docpath As String
+StudiedWell = ThisWorkbook.Sheets("CLR Production Trends").Range("J9").Value
+Windows(ThisWorkbook.Sheets("CLR Production Trends").Range("F9").Value & ".xlsx").Activate
+        ActiveSheet.Range("A1:N1").End(xlDown).AutoFilter Field:=6, Criteria1:=StudiedWell
+        'BOPD
+        Range("B:B,J:J").Select
+        ActiveSheet.Shapes.AddChart.Select
+        On Error GoTo Problem
+            With ActiveChart
+                .ChartType = xlLineMarkers
+                .SetSourceData Source:=Range("Sheet1!B:B,Sheet1!J:J")
+                .HasTitle = True
+                .ChartTitle.Text = StudiedWell & "  BOPD"
+                .SeriesCollection(1).Select
+                    With .Parent
+                    .Left = Cells(Rows.Count, 1).End(xlUp).Offset(1, 0).Left
+                    .Top = Cells(Rows.Count, 1).End(xlUp).Offset(4, 0).Top
+                    End With
+                    With Selection.Format.Line
+                        .Visible = msoTrue
+                        .ForeColor.ObjectThemeColor = msoThemeColorBackground2
+                        .ForeColor.TintAndShade = 0
+                        .ForeColor.Brightness = -0.75
+                        .Transparency = 0
+                    End With
+            End With
+        'BWPD
+        Range("B:B,K:K").Select
+        ActiveSheet.Shapes.AddChart.Select
+            With ActiveChart
+                .ChartType = xlLineMarkers
+                .SetSourceData Source:=Range("Sheet1!B:B,Sheet1!K:K")
+                .HasTitle = True
+                .ChartTitle.Text = StudiedWell & "  BWPD"
+                .SeriesCollection(1).Select
+                    With .Parent
+                    .Left = Cells(Rows.Count, 6).End(xlUp).Offset(1, 0).Left
+                    .Top = Cells(Rows.Count, 6).End(xlUp).Offset(4, 0).Top
+                    End With
+                    With Selection.Format.Line
+                        .Visible = msoTrue
+                        .ForeColor.ObjectThemeColor = msoThemeColorText2
+                        .ForeColor.TintAndShade = 0
+                        .ForeColor.Brightness = 0.4
+                        .Transparency = 0
+                    End With
+            End With
+        'MCFD
+        Range("B:B,I:I").Select
+        ActiveSheet.Shapes.AddChart.Select
+            With ActiveChart
+                .ChartType = xlLineMarkers
+                .SetSourceData Source:=Range("Sheet1!B:B,Sheet1!I:I")
+                .HasTitle = True
+                .ChartTitle.Text = StudiedWell & "  MCFD"
+                .SeriesCollection(1).Select
+                    With .Parent
+                    .Left = Cells(Rows.Count, 9).End(xlUp).Offset(1, 0).Left
+                    .Top = Cells(Rows.Count, 9).End(xlUp).Offset(4, 0).Top
+                    End With
+                    With Selection.Format.Line
+                        .Visible = msoTrue
+                        .ForeColor.ObjectThemeColor = msoThemeColorAccent6
+                        .ForeColor.TintAndShade = 0
+                        .ForeColor.Brightness = -0.25
+                        .Transparency = 0
+                    End With
+            End With
+Unload UF3CLRProductionTrends
+Exit Sub
+Problem:
+    If Err.Number = 1004 Then
+        MsgBox "Well Name is not written correctly.  Try again"
+        ActiveChart.Parent.Cut
+        ActiveSheet.ShowAllData
+        ThisWorkbook.Activate
+        Exit Sub
+    End If
+End Sub
+
+Private Sub cmdDeleteGraphsUnfilter_Click()
+    On Error Resume Next
+    Windows(ThisWorkbook.Sheets("CLR Production Trends").Range("F9").Value & ".xlsx").Activate
+    Dim chtObj As ChartObject
+    For Each chtObj In ActiveSheet.ChartObjects
+        chtObj.Delete
+    Next
+    On Error Resume Next
+    ActiveSheet.ShowAllData
+    Range("A1").Select
+    Unload UF3CLRProductionTrends
+    
+End Sub
